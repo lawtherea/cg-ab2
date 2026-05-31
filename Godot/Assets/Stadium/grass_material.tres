@@ -1,0 +1,21 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://3ggo3pxfuqob"]
+
+[ext_resource type="Texture2D" uid="uid://iaqgrhntkwx1" path="res://Assets/Stadium/grass_texture/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="1_55it3"]
+[ext_resource type="Texture2D" uid="uid://b4xtpb2xshjsv" path="res://Assets/Stadium/grass_texture/Poliigon_GrassPatchyGround_4585_AmbientOcclusion.jpg" id="2_jud1c"]
+[ext_resource type="Texture2D" uid="uid://d2qjfekvgj4fl" path="res://Assets/Stadium/grass_texture/Poliigon_GrassPatchyGround_4585_Metallic.jpg" id="3_q43tn"]
+[ext_resource type="Texture2D" uid="uid://b6qbotdil8k0i" path="res://Assets/Stadium/grass_texture/Poliigon_GrassPatchyGround_4585_Normal.png" id="4_qcorm"]
+[ext_resource type="Texture2D" uid="uid://bi5bcx8qi01i7" path="res://Assets/Stadium/grass_texture/Poliigon_GrassPatchyGround_4585_Roughness.jpg" id="5_gphab"]
+
+[resource]
+albedo_color = Color(0.38431373, 0.70980394, 0, 1)
+albedo_texture = ExtResource("1_55it3")
+metallic = 1.0
+metallic_texture = ExtResource("3_q43tn")
+roughness_texture = ExtResource("5_gphab")
+normal_enabled = true
+normal_scale = 6.27
+normal_texture = ExtResource("4_qcorm")
+ao_enabled = true
+ao_texture = ExtResource("2_jud1c")
+refraction_scale = 0.32
+uv1_scale = Vector3(0.345, 0.345, 0.345)

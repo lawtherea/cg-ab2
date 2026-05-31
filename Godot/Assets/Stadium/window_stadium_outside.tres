@@ -1,0 +1,17 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cldmhe3jduwtq"]
+
+[ext_resource type="Texture2D" uid="uid://bc5rlndkk0wkc" path="res://Assets/Stadium/window_texture/DirtWindowStains005_ALPHAMASKED_2K.png" id="1_yr3nn"]
+[ext_resource type="Texture2D" uid="uid://34vqspwdads2" path="res://Assets/Stadium/window_texture/DirtWindowStains005_NRM_2K.jpg" id="2_j8w1c"]
+[ext_resource type="Texture2D" uid="uid://di5qfdks260b0" path="res://Assets/Stadium/window_texture/DirtWindowStains005_GLOSS_2K.jpg" id="3_mgnmx"]
+
+[resource]
+cull_mode = 2
+albedo_color = Color(0, 0, 0, 1)
+albedo_texture = ExtResource("1_yr3nn")
+roughness_texture = ExtResource("3_mgnmx")
+normal_enabled = true
+normal_texture = ExtResource("2_j8w1c")
+uv1_scale = Vector3(0.165, 0.165, 0.165)
+uv1_offset = Vector3(0, -0.745, 0)
+uv1_triplanar = true
+uv1_triplanar_sharpness = 1.6817932
