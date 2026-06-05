@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://b7h1mfti6a2mh"]
+
+[ext_resource type="Script" uid="uid://cggdvgkjphejt" path="res://view.gd" id="1_u5kg4"]
+
+[node name="camera_pivo" type="Node3D" unique_id=1731273023 node_paths=PackedStringArray("target")]
+script = ExtResource("1_u5kg4")
+target = NodePath("")
+
+[node name="Camera" type="Camera3D" parent="." unique_id=1251065785]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0, 0, 0)
+fov = 30.0
