@@ -3,28 +3,24 @@ extends CharacterBody3D
 const SPEED = 500.0
 const JUMP_VELOCITY = 10.0
 
-@onready var animator = get_node("teste1jogador/AnimationPlayer") as AnimationPlayer
+@onready var animator = get_node("soccer_player/AnimationPlayer") as AnimationPlayer
 
 @export var view : Node3D
 var gravity = 0
 var moviment_velocity : Vector3
 var rotation_direction : float
 
-# --- NOVAS VARIÁVEIS PARA O SISTEMA DE QUEDA ---
-enum Estado { NORMAL, CAINDO, NO_CHAO, LEVANTANDO }
-var estado_atual = Estado.NORMAL
-
-# Tempo (em segundos) que o jogador vai ficar caído antes de começar a levantar
-@export var tempo_no_chao : float = 2.0 
-# ----------------------------------------------
+# --- SISTEMA DE QUEDA SIMPLIFICADO ---
+var blocked : bool = false
+# -------------------------------------
 
 func _ready() -> void:
-	# Conecta o sinal do AnimationPlayer para sabermos quando uma animação termina
+	# Conecta o sinal para saber quando a animação de queda terminou
 	animator.animation_finished.connect(_on_animation_finished)
 
 func _physics_process(delta: float) -> void:
-	# Só processa inputs, pulo e rotação se o jogador estiver no estado NORMAL
-	if estado_atual == Estado.NORMAL:
+	# Só processa inputs, pulo e rotação se NÃO estiver caindo
+	if not blocked:
 		handle_input(delta)
 		jump(delta)
 		handle_animations()
@@ -34,11 +30,18 @@ func _physics_process(delta: float) -> void:
 		rotation.y = lerp_angle(rotation.y, rotation_direction, delta * 10)
 		
 		# Verifica se a tecla de cair foi pressionada
-		# MODIFIQUE AQUI: Substitua "fall" pelo nome correto da sua ação no Mapa de Inputs
 		if Input.is_action_just_pressed("fall") and is_on_floor():
 			iniciar_queda()
+		elif Input.is_action_just_pressed("weak_kick") and is_on_floor():
+			weak_kick()
+		elif Input.is_action_just_pressed("medium_kick") and is_on_floor():
+			medium_kick()
+		elif Input.is_action_just_pressed("strong_kick") and is_on_floor():
+			strong_kick()
+		elif Input.is_action_just_pressed("victory") and is_on_floor():
+			victory()
 	else:
-		# Se não estiver no estado normal (está caído/caindo), ele fica parado
+		# Se estiver caindo, zera o movimento para ele ficar parado no lugar
 		moviment_velocity = Vector3.ZERO
 		velocity.x = 0
 		velocity.z = 0
@@ -60,12 +63,11 @@ func handle_input(delta):
 	
 	input = input.rotated(Vector3.UP, view.rotation.y).normalized()
 	
-	# Corrigido: alimentando a moviment_velocity para o lerp do physics_process
-	moviment_velocity = input * SPEED * delta 
+	moviment_velocity = input * SPEED * delta     
 	
 func handle_animations():
 	if abs(velocity.x) > 1 or abs(velocity.z) > 1:
-		animator.play("slow run", 0.3)
+		animator.play("slow_run", 0.3)
 	else :
 		animator.play("idle", 0.3)
 		
@@ -80,35 +82,30 @@ func jump(delta):
 	if gravity > 0 and is_on_floor():
 		gravity = 0
 
-# --- NOVAS FUNÇÕES PARA GERENCIAR A QUEDA ---
+# --- FUNÇÕES DA ANIMAÇÃO DE QUEDA ---
 
 func iniciar_queda():
-	estado_atual = Estado.CAINDO
+	blocked = true
 	moviment_velocity = Vector3.ZERO
-	
-	# MODIFIQUE AQUI: Substitua "animacao_cair" pelo nome da sua animação de queda
 	animator.play("fall", 0.2)
+	
+func weak_kick():
+	blocked = true
+	animator.play("weak_kick", 0.2)
+	
+func medium_kick():
+	blocked = true
+	animator.play("medium_kick", 0.2)
+	
+func strong_kick():
+	blocked = true
+	animator.play("strong_kick", 0.2)
+	
+func victory():
+	blocked = true
+	animator.play("victory", 0.2)
 
 func _on_animation_finished(anim_name: String):
-	# Se terminou a animação de cair, ele vai para o chão e inicia o tempo de espera
-	# MODIFIQUE AQUI: Substitua "animacao_cair" pelo nome da sua animação de queda
-	if anim_name == "fall" and estado_atual == Estado.CAINDO:
-		estado_atual = Estado.NO_CHAO
-		
-		# MODIFIQUE AQUI: Substitua "idle_fall" pelo nome da sua animação de deitado no chão
-		animator.play("idle fall", 0.2)
-		
-		# Cria um timer temporário para esperar o tempo determinado
-		await get_tree().create_timer(tempo_no_chao).timeout
-		
-		# Após o tempo acabar, começa a levantar
-		if estado_atual == Estado.NO_CHAO: # Garante que ainda está no chão
-			estado_atual = Estado.LEVANTANDO
-			
-			# MODIFIQUE AQUI: Substitua "animacao_levantar" pelo nome da sua animação de levantar
-			animator.play("lift", 0.2)
-
-	# Se terminou a animação de levantar, o jogador volta ao controle normal
-	# MODIFIQUE AQUI: Substitua "animacao_levantar" pelo nome da sua animação de levantar
-	elif anim_name == "lift" and estado_atual == Estado.LEVANTANDO:
-		estado_atual = Estado.NORMAL
+	# Quando a animação única de queda terminar, devolve o controle ao jogador
+	if anim_name != "idle" and anim_name != "slow_run":
+		blocked = false
