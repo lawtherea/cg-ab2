@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://b4q31xdhrv6co"]
+
+[ext_resource type="Script" uid="uid://xt5iry33jww" path="res://Assets/Player/character_body_3d.gd" id="1_c2wt1"]
+[ext_resource type="PackedScene" uid="uid://dbobykw78lon0" path="res://Assets/Player/teste1jogador.glb" id="2_q2130"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6qhym"]
+
+[node name="CharacterBody3D" type="CharacterBody3D" unique_id=1646604336]
+script = ExtResource("1_c2wt1")
+metadata/_edit_group_ = true
+
+[node name="teste1jogador" parent="." unique_id=860602301 instance=ExtResource("2_q2130")]
+transform = Transform3D(0.03, 0, 0, 0, 0.03, 0, 0, 0, 0.03, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1196446801]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 1.000452, 0.014296055)
+shape = SubResource("CapsuleShape3D_6qhym")
