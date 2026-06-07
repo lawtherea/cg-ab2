@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://d343vmpjw7o5n"]
+
+[ext_resource type="Texture2D" uid="uid://co7rjswm0juvo" path="res://Assets/Stadium/advertising_texture/advertising.png" id="1_cf2gc"]
+
+[resource]
+cull_mode = 2
+albedo_texture = ExtResource("1_cf2gc")
+uv1_scale = Vector3(1, 0.155, 0.03)
+uv1_offset = Vector3(0, 0.4, 1.78)
+uv1_triplanar = true
