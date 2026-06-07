@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://bf00cny3e2yjv"]
+
+[ext_resource type="PackedScene" uid="uid://bmpkpcaurid33" path="res://Assets/Stadium/boundry.glb" id="1_xfc5u"]
+
+[node name="boundry" unique_id=1014784410 instance=ExtResource("1_xfc5u")]
