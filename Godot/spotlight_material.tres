@@ -1,0 +1,16 @@
+[gd_resource type="ORMMaterial3D" format=3 uid="uid://dh06ctm4yw22p"]
+
+[ext_resource type="Texture2D" uid="uid://cal6mjr0bsl10" path="res://Assets/Stadium/lights/Spotlight_basecolor.png" id="1_440bj"]
+[ext_resource type="Texture2D" uid="uid://b5od1f6k0atp3" path="res://Assets/Stadium/lights/Spotlight_normal.png" id="3_8sd03"]
+[ext_resource type="Texture2D" uid="uid://xkvmfb4ut1t" path="res://Assets/Stadium/lights/Spotlight_roughness.png" id="4_ad2pr"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ndt4e"]
+load_path = "res://.godot/imported/Spotlight_emission.png-aef379cb63d4b50360d7f10d9c202a39.s3tc.ctex"
+
+[resource]
+albedo_texture = ExtResource("1_440bj")
+orm_texture = ExtResource("4_ad2pr")
+emission_enabled = true
+emission_texture = SubResource("CompressedTexture2D_ndt4e")
+normal_enabled = true
+normal_texture = ExtResource("3_8sd03")
