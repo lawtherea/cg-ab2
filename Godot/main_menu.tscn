@@ -48,5 +48,14 @@ size_flags_horizontal = 0
 size_flags_stretch_ratio = 0.0
 text = "Sair"
 
+[node name="CheckButton" type="CheckButton" parent="." unique_id=179715997]
+layout_mode = 0
+offset_left = 513.0
+offset_top = 425.0
+offset_right = 604.0
+offset_bottom = 456.0
+text = "Noite"
+
 [connection signal="pressed" from="Jogar" to="." method="_on_play_button_pressed"]
 [connection signal="pressed" from="Sair" to="." method="_on_quit_button_pressed"]
+[connection signal="toggled" from="CheckButton" to="." method="_on_check_button_toggled"]

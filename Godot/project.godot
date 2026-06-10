@@ -14,6 +14,10 @@ config/name="cg-ab2"
 run/main_scene="uid://bygxpll0yvfkg"
 config/features=PackedStringArray("4.6", "Forward Plus")
 
+[autoload]
+
+GameSettings="*uid://dqeo0pe1oysif"
+
 [input]
 
 camera_left={
