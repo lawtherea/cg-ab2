@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const SPEED = 500.0
+const SPEED = 400.0
 const JUMP_VELOCITY = 10.0
 
 @onready var animator = get_node("soccer_player/AnimationPlayer") as AnimationPlayer
@@ -9,6 +9,8 @@ const JUMP_VELOCITY = 10.0
 var gravity = 0
 var moviment_velocity : Vector3
 var rotation_direction : float
+var kick_force = 1
+var ball_control = 1.01
 
 # --- SISTEMA DE QUEDA SIMPLIFICADO ---
 var blocked : bool = false
@@ -53,8 +55,17 @@ func _physics_process(delta: float) -> void:
 	applied_velocity.y = -gravity
 	
 	velocity = applied_velocity
+	
+	if kick_force > 1 && $KickTimer.time_left > 0:
+		ball_control = 1
+	else:
+		ball_control = 1.01
 
 	move_and_slide()
+	for i in get_slide_collision_count():
+		var collision = get_slide_collision(i)
+		if collision.get_collider(i) is RigidBody3D:
+			collision.get_collider(i).apply_central_impulse(-collision.get_normal() * ball_control * kick_force)
 
 func handle_input(delta):
 	var input := Vector3.ZERO
@@ -92,14 +103,21 @@ func iniciar_queda():
 func weak_kick():
 	blocked = true
 	animator.play("weak_kick", 0.2)
+	kick_force = 2
+	$KickTimer.start()
+	
 	
 func medium_kick():
 	blocked = true
 	animator.play("medium_kick", 0.2)
+	kick_force = 4
+	$KickTimer.start()
 	
 func strong_kick():
 	blocked = true
 	animator.play("strong_kick", 0.2)
+	kick_force = 6
+	$KickTimer.start()
 	
 func victory():
 	blocked = true
@@ -109,3 +127,9 @@ func _on_animation_finished(anim_name: String):
 	# Quando a animação única de queda terminar, devolve o controle ao jogador
 	if anim_name != "idle" and anim_name != "slow_run":
 		blocked = false
+
+
+func _on_kick_timer_timeout() -> bool:
+	print(kick_force)
+	kick_force = 1
+	return true
