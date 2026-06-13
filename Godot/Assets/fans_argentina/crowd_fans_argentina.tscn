@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://xlds3t60qf5j"]
+
+[ext_resource type="Script" uid="uid://baajhhcvj4ucw" path="res://crowd_manager.gd" id="1_1xt1e"]
+[ext_resource type="PackedScene" uid="uid://b1j4aqhkys4ea" path="res://Assets/fans_argentina/fan_argentina.tscn" id="2_mkfas"]
+
+[node name="crowd_fans_argentina" type="Node3D" unique_id=394614908]
+script = ExtResource("1_1xt1e")
+fan_scene = ExtResource("2_mkfas")
+rows = 11

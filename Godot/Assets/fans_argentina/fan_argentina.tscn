@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://b1j4aqhkys4ea"]
+
+[ext_resource type="Script" uid="uid://rxnqbix4kl68" path="res://fan.gd" id="1_yby25"]
+[ext_resource type="PackedScene" uid="uid://h3poecv3muek" path="res://Assets/fans_argentina/fan_argentina_1.fbx" id="2_p6du1"]
+[ext_resource type="PackedScene" uid="uid://bfx602emt8j6u" path="res://Assets/fans_argentina/fan_argentina_2.fbx" id="3_8cepa"]
+
+[node name="fan" type="Node3D" unique_id=1223006869]
+script = ExtResource("1_yby25")
+fbx_models = Array[PackedScene]([ExtResource("2_p6du1"), ExtResource("3_8cepa")])
+
+[node name="VisualPivot" type="Marker3D" parent="." unique_id=1315767125]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)

@@ -2,7 +2,7 @@ extends Node3D
 
 @export_category("Crowd Settings")
 @export var fan_scene: PackedScene # Arraste o Torcedor.tscn aqui
-@export_range(0.0, 1.0) var crowd_density: float = 0.2 # 50% de chance de ter torcedor
+@export_range(0.0, 1.0) var crowd_density: float = 0.08 #chance de ter torcedor
 
 @export_category("Bleacher Dimensions")
 @export var rows: int = 10

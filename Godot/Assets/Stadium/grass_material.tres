@@ -7,9 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://bi5bcx8qi01i7" path="res://Assets/Stadium/grass_texture/Poliigon_GrassPatchyGround_4585_Roughness.jpg" id="5_gphab"]
 
 [resource]
+specular_mode = 2
 albedo_color = Color(0.38431373, 0.70980394, 0, 1)
 albedo_texture = ExtResource("1_55it3")
-metallic = 1.0
+metallic_specular = 0.1
 metallic_texture = ExtResource("3_q43tn")
 roughness_texture = ExtResource("5_gphab")
 normal_enabled = true
