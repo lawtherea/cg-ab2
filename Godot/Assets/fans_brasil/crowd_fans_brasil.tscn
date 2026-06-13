@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://drxbsb2oc0fps"]
+
+[ext_resource type="Script" uid="uid://baajhhcvj4ucw" path="res://crowd_manager.gd" id="1_uilp1"]
+[ext_resource type="PackedScene" uid="uid://cvbmmntqdphev" path="res://Assets/fans_brasil/fan_brasil.tscn" id="2_n0j12"]
+
+[node name="crowd_fans_brasil" type="Node3D" unique_id=394614908]
+script = ExtResource("1_uilp1")
+fan_scene = ExtResource("2_n0j12")
+rows = 11

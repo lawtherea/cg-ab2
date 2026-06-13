@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://bn7605y2cdluk"]
+
+[ext_resource type="PackedScene" uid="uid://drxbsb2oc0fps" path="res://Assets/fans_brasil/crowd_fans_brasil.tscn" id="1_mg0gp"]
+
+[node name="3crowd_fans_brasil" type="Node3D" unique_id=163310034]
+
+[node name="crowd_fans_brasil6" parent="." unique_id=394614908 instance=ExtResource("1_mg0gp")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.11072922, -0.026989698, 0.003929138)
+
+[node name="crowd_fans_brasil7" parent="." unique_id=1436583598 instance=ExtResource("1_mg0gp")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.024024963, 0.028933108, -13.126228)
+
+[node name="crowd_fans_brasil8" parent="." unique_id=535725897 instance=ExtResource("1_mg0gp")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.039325714, 0.019181013, -26.750023)
