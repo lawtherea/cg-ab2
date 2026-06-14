@@ -10,102 +10,194 @@ var gravity = 0
 var moviment_velocity : Vector3
 var rotation_direction : float
 
-# --- SISTEMA DE QUEDA SIMPLIFICADO ---
-var blocked : bool = false
-# -------------------------------------
+# --- VARIÁVEIS DE CONTROLE E IA ---
+@export var is_controlled : bool = false # Define se este jogador recebe inputs do teclado 
+var formation_target_position : Vector3  # Posição ideal dele no campo de acordo com a tática 
+var ball_node : Node3D                   # Referência para a bola do jogo 
+@export var min_distance_to_ball : float = 2.0 # Distância que a IA manterá da bola ao persegui-la
+# ----------------------------------
+
+var blocked : bool = false 
 
 func _ready() -> void:
-	# Conecta o sinal para saber quando a animação de queda terminou
-	animator.animation_finished.connect(_on_animation_finished)
+	# Conecta o sinal para saber quando a animação de queda/chute terminou 
+	animator.animation_finished.connect(_on_animation_finished) 
+	# Garante que as variáveis de formação comecem na posição atual caso não sejam setadas externamente 
+	formation_target_position = global_position 
 
 func _physics_process(delta: float) -> void:
-	# Só processa inputs, pulo e rotação se NÃO estiver caindo
-	if not blocked:
-		handle_input(delta)
-		jump(delta)
-		handle_animations()
+	if not blocked: 
+		# DIFERENCIAÇÃO DE COMPORTAMENTO 
+		if is_controlled: 
+			handle_input(delta) 
+			handle_user_actions() 
+		else: 
+			handle_ai(delta) # Movimentação programada (IA) 
+			
+		jump(delta) 
+		handle_animations() 
 		
-		if Vector2(velocity.z, velocity.x).length() > 0:
-			rotation_direction = Vector2(velocity.z, velocity.x).angle()
-		rotation.y = lerp_angle(rotation.y, rotation_direction, delta * 10)
+		if Vector2(velocity.z, velocity.x).length() > 0: 
+			rotation_direction = Vector2(velocity.z, velocity.x).angle() 
+		rotation.y = lerp_angle(rotation.y, rotation_direction, delta * 10) 
 		
-		# Verifica se a tecla de cair foi pressionada
-		if Input.is_action_just_pressed("fall") and is_on_floor():
-			iniciar_queda()
-		elif Input.is_action_just_pressed("weak_kick") and is_on_floor():
-			weak_kick()
-		elif Input.is_action_just_pressed("medium_kick") and is_on_floor():
-			medium_kick()
-		elif Input.is_action_just_pressed("strong_kick") and is_on_floor():
-			strong_kick()
-		elif Input.is_action_just_pressed("victory") and is_on_floor():
-			victory()
-	else:
-		# Se estiver caindo, zera o movimento para ele ficar parado no lugar
-		moviment_velocity = Vector3.ZERO
-		velocity.x = 0
-		velocity.z = 0
+	else: 
+		# Se estiver bloqueado (chutando ou caindo), zera o movimento e a física residual imediatamente
+		moviment_velocity = Vector3.ZERO 
+		velocity.x = 0 
+		velocity.z = 0 
 
-	apply_gravity(delta)
+	apply_gravity(delta) 
 	
 	var applied_velocity : Vector3 
-	applied_velocity = velocity.lerp(moviment_velocity, delta * 10)
-	applied_velocity.y = -gravity
+	applied_velocity = velocity.lerp(moviment_velocity, delta * 10) 
+	applied_velocity.y = -gravity 
 	
-	velocity = applied_velocity
+	velocity = applied_velocity 
 
-	move_and_slide()
+	move_and_slide() 
 
+# Processa apenas o direcional do usuário conectado à câmera 
 func handle_input(delta):
-	var input := Vector3.ZERO
-	input.x = Input.get_axis("move_left", "move_right")
-	input.z = Input.get_axis("move_forward", "move_backward")
+	var input := Vector3.ZERO 
+	input.x = Input.get_axis("move_left", "move_right") 
+	input.z = Input.get_axis("move_forward", "move_backward") 
 	
-	input = input.rotated(Vector3.UP, view.rotation.y).normalized()
+	# Só calcula rotação baseada na câmera se a câmera estiver instanciada/associada 
+	if view: 
+		input = input.rotated(Vector3.UP, view.rotation.y).normalized() 
 	
 	moviment_velocity = input * SPEED * delta     
+
+# Isola as ações de chute/ações para o jogador controlado pelo usuário
+func handle_user_actions():
+	if not is_on_floor():
+		return # Se não estiver no chão, ignora todas as ações abaixo
+		
+	if Input.is_action_just_pressed("fall"):
+		iniciar_queda()
+	elif Input.is_action_just_pressed("weak_kick"):
+		weak_kick()
+	elif Input.is_action_just_pressed("medium_kick"):
+		medium_kick()
+	elif Input.is_action_just_pressed("strong_kick"):
+		strong_kick()
+	elif Input.is_action_just_pressed("victory"):
+		victory()
+
+# LÓGICA DA IA (Movimentação programada baseada na bola e formação) 
+func handle_ai(delta):
+	if not ball_node: 
+		moviment_velocity = Vector3.ZERO 
+		return 
+
+	var target_pos = formation_target_position 
+	var distance_to_ball = global_position.distance_to(ball_node.global_position) 
 	
+	# Se a bola estiver perto (menos de 8 metros), o jogador decide interagir com ela 
+	if distance_to_ball < 8.0: 
+		# Se ele atingir ou ultrapassar a distância mínima regulada, ele para de correr atrás dela
+		if distance_to_ball <= min_distance_to_ball:
+			moviment_velocity = Vector3.ZERO
+			return
+		
+		target_pos = ball_node.global_position 
+		
+	# Calcula a direção até o ponto ideal (seja a bola ou a sua posição na tática) 
+	var direction = (target_pos - global_position) 
+	direction.y = 0 # Ignora eixo Y para movimentação no plano do campo 
+	
+	# Se estiver caçando a bola, ajustamos o vetor para ele desacelerar à distância correta
+	if distance_to_ball < 8.0:
+		var direction_to_player = (global_position - ball_node.global_position).normalized()
+		target_pos = ball_node.global_position + (direction_to_player * min_distance_to_ball)
+		direction = (target_pos - global_position)
+		direction.y = 0
+
+	# Se estiver longe do ponto ideal, corre em direção a ele 
+	if direction.length() > 0.5: 
+		direction = direction.normalized() 
+		# Reduz ligeiramente a velocidade da IA para dar vantagem ao jogador controlado 
+		moviment_velocity = direction * (SPEED * 0.8) * delta 
+	else: 
+		moviment_velocity = Vector3.ZERO 
+
+# --- GERENCIAMENTO DE ANIMAÇÕES PADRÃO ---
 func handle_animations():
-	if abs(velocity.x) > 1 or abs(velocity.z) > 1:
-		animator.play("slow_run", 0.3)
-	else :
-		animator.play("idle", 0.3)
+	# Blindagem extra: se estiver executando uma ação de travamento, ignora atualizações de corrida/idle
+	if blocked:
+		return
+		
+	# Verificação da velocidade de movimentação real aplicada no corpo
+	if abs(velocity.x) > 0.2 or abs(velocity.z) > 0.2: 
+		animator.play("slow_run", 0.3) 
+	else : 
+		animator.play("idle", 0.3) 
 		
 func apply_gravity(delta):
-	if not is_on_floor():
-		gravity += 25 * delta
+	if is_on_floor():
+		if gravity > 0:
+			gravity = 0
+	else:
+		gravity += 25.0 * delta
 	
 func jump(delta):
+	# Só processa a intenção de pulo se for o jogador controlado
+	if not is_controlled:
+		return
+		
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		gravity = -JUMP_VELOCITY
-		
-	if gravity > 0 and is_on_floor():
-		gravity = 0
 
-# --- FUNÇÕES DA ANIMAÇÃO DE QUEDA ---
+# --- FUNÇÕES DA ANIMAÇÃO DE BLOQUEIO (Ações do Jogador) ---
+# Limpar as variáveis de velocidade antes de rodar o .play() impede que a animação anterior atropele o comando
+
+# --- FUNÇÕES DA ANIMAÇÃO DE BLOQUEIO (Ações do Jogador) ---
 
 func iniciar_queda():
 	blocked = true
+	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
-	animator.play("fall", 0.2)
-	
+	animator.play("fall", 0.1)
+
 func weak_kick():
 	blocked = true
-	animator.play("weak_kick", 0.2)
-	
+	velocity = Vector3.ZERO
+	moviment_velocity = Vector3.ZERO
+	animator.play("weak_kick", 0.1)
+
 func medium_kick():
 	blocked = true
-	animator.play("medium_kick", 0.2)
-	
+	velocity = Vector3.ZERO
+	moviment_velocity = Vector3.ZERO
+	animator.play("medium_kick", 0.1)
+
 func strong_kick():
 	blocked = true
-	animator.play("strong_kick", 0.2)
-	
+	velocity = Vector3.ZERO
+	moviment_velocity = Vector3.ZERO
+	animator.play("strong_kick", 0.1)
+
 func victory():
 	blocked = true
-	animator.play("victory", 0.2)
+	velocity = Vector3.ZERO
+	moviment_velocity = Vector3.ZERO
+	animator.play("victory", 0.1)
+
+# --- SISTEMA INTELIGENTE DE DESTRAVAMENTO DE ANIMAÇÃO ---
 
 func _on_animation_finished(anim_name: String):
-	# Quando a animação única de queda terminar, devolve o controle ao jogador
-	if anim_name != "idle" and anim_name != "slow_run":
-		blocked = false
+	var blocking_animations = ["fall", "weak_kick", "medium_kick", "strong_kick", "victory"]
+	
+	# Loop seguro por índice numérico para evitar conflitos de sintaxe
+	for i in range(blocking_animations.size()):
+		var animacao_bloqueante = blocking_animations[i]
+		if animacao_bloqueante in anim_name:
+			blocked = false
+			return
+	
+	# Usando busca parcial. Resolve problemas caso a animação venha com prefixos como "Player_Brasil/weak_kick"
+	for block_anim in blocking_animations:
+		if block_anim in anim_name:
+			blocked = false
+			return
