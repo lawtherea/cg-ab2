@@ -10,69 +10,66 @@ var gravity = 0
 var moviment_velocity : Vector3
 var rotation_direction : float
 
-# --- VARIÁVEIS DE CONTROLE E IA ---
-@export var is_controlled : bool = false # Define se este jogador recebe inputs do teclado 
-var formation_target_position : Vector3  # Posição ideal dele no campo de acordo com a tática 
-var ball_node : Node3D                   # Referência para a bola do jogo 
-@export var min_distance_to_ball : float = 2.0 # Distância que a IA manterá da bola ao persegui-la
-# ----------------------------------
+# --- VARIÁVEIS DE CONTROLE E IA BASEADA EM ZONAS ---
+@export var is_controlled : bool = false      # Define se este jogador recebe inputs do teclado
+var formation_target_position : Vector3       # Posição ideal enviada pelo Manager (se aplicável)
+var ball_node : Node3D                        # Referência para a bola do jogo
+@export var min_distance_to_ball : float = 3  # Distância física ideal para cercar a bola
 
-var blocked : bool = false 
+@export var patrol_radius : float = 10.0       # Raio da área/zona que o jogador protege e monitora
+var home_position : Vector3                    # Guarda o ponto inicial onde o jogador começou no campo
+# --------------------------------------------------
+
+var blocked : bool = false
 
 func _ready() -> void:
-	# Conecta o sinal para saber quando a animação de queda/chute terminou 
-	animator.animation_finished.connect(_on_animation_finished) 
-	# Garante que as variáveis de formação comecem na posição atual caso não sejam setadas externamente 
-	formation_target_position = global_position 
+	animator.animation_finished.connect(_on_animation_finished)
+	# Salva a posição exata onde o jogador foi instanciado como sua "casa"
+	home_position = global_position
+	formation_target_position = global_position
 
 func _physics_process(delta: float) -> void:
-	if not blocked: 
-		# DIFERENCIAÇÃO DE COMPORTAMENTO 
-		if is_controlled: 
-			handle_input(delta) 
-			handle_user_actions() 
-		else: 
-			handle_ai(delta) # Movimentação programada (IA) 
+	if not blocked:
+		if is_controlled:
+			handle_input(delta)
+			handle_user_actions()
+		else:
+			handle_ai_zone(delta) # Nova IA baseada em Zonas de Atuação
 			
-		jump(delta) 
-		handle_animations() 
+		jump(delta)
+		handle_animations()
 		
-		if Vector2(velocity.z, velocity.x).length() > 0: 
-			rotation_direction = Vector2(velocity.z, velocity.x).angle() 
-		rotation.y = lerp_angle(rotation.y, rotation_direction, delta * 10) 
+		if Vector2(velocity.z, velocity.x).length() > 0:
+			rotation_direction = Vector2(velocity.z, velocity.x).angle()
+		rotation.y = lerp_angle(rotation.y, rotation_direction, delta * 10)
 		
-	else: 
-		# Se estiver bloqueado (chutando ou caindo), zera o movimento e a física residual imediatamente
-		moviment_velocity = Vector3.ZERO 
-		velocity.x = 0 
-		velocity.z = 0 
+	else:
+		moviment_velocity = Vector3.ZERO
+		velocity.x = 0
+		velocity.z = 0
 
-	apply_gravity(delta) 
+	apply_gravity(delta)
 	
-	var applied_velocity : Vector3 
-	applied_velocity = velocity.lerp(moviment_velocity, delta * 10) 
-	applied_velocity.y = -gravity 
+	var applied_velocity : Vector3
+	applied_velocity = velocity.lerp(moviment_velocity, delta * 10)
+	applied_velocity.y = -gravity
 	
-	velocity = applied_velocity 
+	velocity = applied_velocity
+	move_and_slide()
 
-	move_and_slide() 
-
-# Processa apenas o direcional do usuário conectado à câmera 
 func handle_input(delta):
-	var input := Vector3.ZERO 
-	input.x = Input.get_axis("move_left", "move_right") 
-	input.z = Input.get_axis("move_forward", "move_backward") 
+	var input := Vector3.ZERO
+	input.x = Input.get_axis("move_left", "move_right")
+	input.z = Input.get_axis("move_forward", "move_backward")
 	
-	# Só calcula rotação baseada na câmera se a câmera estiver instanciada/associada 
-	if view: 
-		input = input.rotated(Vector3.UP, view.rotation.y).normalized() 
+	if view:
+		input = input.rotated(Vector3.UP, view.rotation.y).normalized()
 	
 	moviment_velocity = input * SPEED * delta     
 
-# Isola as ações de chute/ações para o jogador controlado pelo usuário
 func handle_user_actions():
 	if not is_on_floor():
-		return # Se não estiver no chão, ignora todas as ações abaixo
+		return 
 		
 	if Input.is_action_just_pressed("fall"):
 		iniciar_queda()
@@ -85,54 +82,89 @@ func handle_user_actions():
 	elif Input.is_action_just_pressed("victory"):
 		victory()
 
-# LÓGICA DA IA (Movimentação programada baseada na bola e formação) 
-func handle_ai(delta):
-	if not ball_node: 
-		moviment_velocity = Vector3.ZERO 
-		return 
+# --- LÓGICA DE IA POR ZONA DE ATUAÇÃO COM DESLOCAMENTO DINÂMICO DO EIXO Z ---
+func handle_ai_zone(delta: float):
+	if not ball_node:
+		moviment_velocity = Vector3.ZERO
+		return
 
-	var target_pos = formation_target_position 
-	var distance_to_ball = global_position.distance_to(ball_node.global_position) 
+	var target_pos : Vector3
+	var ball_pos = ball_node.global_position
 	
-	# Se a bola estiver perto (menos de 8 metros), o jogador decide interagir com ela 
-	if distance_to_ball < 8.0: 
-		# Se ele atingir ou ultrapassar a distância mínima regulada, ele para de correr atrás dela
+	# CALCULO DA DINÂMICA DE RECUO/AVANÇO DA LINHA TÁTICA
+	var dynamic_home = home_position
+	
+	if ball_pos.z > 54.5:
+		# Calcula a distância da bola para o limite tático no eixo Z
+		var z_distance_from_limit = ball_pos.z - 54.5
+		# Move a posição base de referência temporariamente acompanhando esse deslocamento
+		dynamic_home.z = home_position.z + z_distance_from_limit
+	else:
+		# Se a bola estiver abaixo ou igual a 35, respeita estritamente a home padrão
+		dynamic_home = home_position
+
+	# 1. Verifica a distância usando a 'dynamic_home' atualizada
+	var ball_distance_from_home = dynamic_home.distance_to(ball_pos)
+	var distance_to_ball = global_position.distance_to(ball_pos)
+
+	# CONDIÇÃO: A bola está dentro do raio de cobertura da minha zona modificada?
+	if ball_distance_from_home <= patrol_radius:
+		
+		# Se eu já cheguei perto da bola dentro do meu raio, eu paro e cerco
 		if distance_to_ball <= min_distance_to_ball:
-			moviment_velocity = Vector3.ZERO
+			moviment_velocity = column_decay_stop(delta)
+			focar_olhar(ball_pos)
 			return
+			
+		# Antecipação tática da bola
+		var ball_vel = Vector3.ZERO
+		if ball_node is RigidBody3D:
+			ball_vel = ball_node.linear_velocity
 		
-		target_pos = ball_node.global_position 
+		var ponto_futuro_da_bola = ball_pos + (ball_vel * 0.2)
+		var direcao_da_bola_ao_jogador = (global_position - ponto_futuro_da_bola).normalized()
 		
-	# Calcula a direção até o ponto ideal (seja a bola ou a sua posição na tática) 
-	var direction = (target_pos - global_position) 
-	direction.y = 0 # Ignora eixo Y para movimentação no plano do campo 
-	
-	# Se estiver caçando a bola, ajustamos o vetor para ele desacelerar à distância correta
-	if distance_to_ball < 8.0:
-		var direction_to_player = (global_position - ball_node.global_position).normalized()
-		target_pos = ball_node.global_position + (direction_to_player * min_distance_to_ball)
-		direction = (target_pos - global_position)
-		direction.y = 0
+		# Define o alvo como a borda da bola
+		target_pos = ponto_futuro_da_bola + (direcao_da_bola_ao_jogador * min_distance_to_ball)
+		
+	else:
+		# CASO CONTRÁRIO: Fora do raio, retorna e defende a posição tática dinâmica corrigida
+		target_pos = dynamic_home
 
-	# Se estiver longe do ponto ideal, corre em direção a ele 
-	if direction.length() > 0.5: 
-		direction = direction.normalized() 
-		# Reduz ligeiramente a velocidade da IA para dar vantagem ao jogador controlado 
-		moviment_velocity = direction * (SPEED * 0.8) * delta 
-	else: 
-		moviment_velocity = Vector3.ZERO 
+	# 2. Executa a movimentação física até o alvo determinado
+	var direction = (target_pos - global_position)
+	direction.y = 0
 
-# --- GERENCIAMENTO DE ANIMAÇÕES PADRÃO ---
+	if direction.length() > 0.1:
+		direction = direction.normalized()
+		
+		# Mantém as proporções originais de velocidade da sua zona de patrulha
+		var speed_multiplier = 0.65 if ball_distance_from_home <= patrol_radius else 0.55
+		moviment_velocity = direction * (SPEED * speed_multiplier) * delta
+	else:
+		moviment_velocity = Vector3.ZERO
+		focar_olhar(ball_pos)
+
+# Função auxiliar para frenagem suave nas bordas da bola
+func column_decay_stop(delta: float) -> Vector3:
+	return column_decay_stop_value(moviment_velocity, delta)
+
+func column_decay_stop_value(current_vel: Vector3, delta: float) -> Vector3:
+	return current_vel.lerp(Vector3.ZERO, delta * 10)
+
+func focar_olhar(alvo: Vector3):
+	var look_target = alvo
+	look_target.y = global_position.y
+	rotation_direction = Vector2(look_target.z - global_position.z, look_target.x - global_position.x).angle()
+
+# --- ANIMAÇÕES E MÓDULOS DE FÍSICA ---
 func handle_animations():
-	# Blindagem extra: se estiver executando uma ação de travamento, ignora atualizações de corrida/idle
 	if blocked:
 		return
-		
-	# Verificação da velocidade de movimentação real aplicada no corpo
-	if abs(velocity.x) > 0.2 or abs(velocity.z) > 0.2: 
-		animator.play("slow_run", 0.3) 
-	else : 
-		animator.play("idle", 0.3) 
+	if abs(velocity.x) > 0.2 or abs(velocity.z) > 0.2:
+		animator.play("slow_run", 0.3)
+	else :
+		animator.play("idle", 0.3)
 		
 func apply_gravity(delta):
 	if is_on_floor():
@@ -142,62 +174,46 @@ func apply_gravity(delta):
 		gravity += 25.0 * delta
 	
 func jump(delta):
-	# Só processa a intenção de pulo se for o jogador controlado
 	if not is_controlled:
 		return
-		
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		gravity = -JUMP_VELOCITY
 
-# --- FUNÇÕES DA ANIMAÇÃO DE BLOQUEIO (Ações do Jogador) ---
-# Limpar as variáveis de velocidade antes de rodar o .play() impede que a animação anterior atropele o comando
-
-# --- FUNÇÕES DA ANIMAÇÃO DE BLOQUEIO (Ações do Jogador) ---
-
+# --- FUNÇÕES DAS ANIMAÇÕES DE BLOQUEIO ---
 func iniciar_queda():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("fall", 0.1)
-
+	
 func weak_kick():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("weak_kick", 0.1)
-
+	
 func medium_kick():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("medium_kick", 0.1)
-
+	
 func strong_kick():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("strong_kick", 0.1)
-
+	
 func victory():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("victory", 0.1)
 
-# --- SISTEMA INTELIGENTE DE DESTRAVAMENTO DE ANIMAÇÃO ---
-
 func _on_animation_finished(anim_name: String):
 	var blocking_animations = ["fall", "weak_kick", "medium_kick", "strong_kick", "victory"]
-	
-	# Loop seguro por índice numérico para evitar conflitos de sintaxe
 	for i in range(blocking_animations.size()):
 		var animacao_bloqueante = blocking_animations[i]
 		if animacao_bloqueante in anim_name:
-			blocked = false
-			return
-	
-	# Usando busca parcial. Resolve problemas caso a animação venha com prefixos como "Player_Brasil/weak_kick"
-	for block_anim in blocking_animations:
-		if block_anim in anim_name:
 			blocked = false
 			return

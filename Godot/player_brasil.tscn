@@ -3,17 +3,16 @@
 [ext_resource type="Script" uid="uid://xt5iry33jww" path="res://script_player_brasil.gd" id="1_k0c2i"]
 [ext_resource type="PackedScene" uid="uid://c84mi2vfvtdto" path="res://Assets/Player/soccer_player.glb" id="2_28fyv"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6qhym"]
-radius = 0.33398438
-height = 2.1640625
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_k0c2i"]
+radius = 0.43164063
 
 [node name="player_brasil" type="CharacterBody3D" unique_id=2026482493]
 script = ExtResource("1_k0c2i")
 metadata/_edit_group_ = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=393012054]
-transform = Transform3D(0.83, 0, 0, 0, 0.83, 0, 0, 0, 0.83, 0, 0.89296126, 0.037580848)
-shape = SubResource("CapsuleShape3D_6qhym")
+transform = Transform3D(0.83, 0, 0, 0, 0.83, 0, 0, 0, 0.83, 0.006408386, 0.7861717, 0.037580848)
+shape = SubResource("CylinderShape3D_k0c2i")
 
 [node name="model_player_brasil" parent="." unique_id=174052475 instance=ExtResource("2_28fyv")]
 transform = Transform3D(0.025, 0, 0, 0, 0.025, 0, 0, 0, 0.025, 0, 0, 0)
