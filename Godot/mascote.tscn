@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://dq85g4vh71jc1"]
+
+[ext_resource type="PackedScene" uid="uid://c1bfwn8kbk1wq" path="res://Assets/Mascot/animacoes_mascote.glb" id="1_tkw6l"]
+
+[node name="animacoes_mascote" unique_id=1977506932 instance=ExtResource("1_tkw6l")]

@@ -9,13 +9,13 @@ extends Node
 	Vector3(35, 0, 50),
 	Vector3(15, 0, 15),
 	Vector3(35, 0, 15),
-	Vector3(52, 0, 15),  # Zagueiro Esquerdo
-	Vector3(25.5, 0, 22),   # Zagueiro Direito
-	Vector3(44, 0, 22),     # Meio Campo
-	Vector3(8, 0, 40), # Atacante 1
+	Vector3(52, 0, 15),  
+	Vector3(25.5, 0, 22),   
+	Vector3(44, 0, 22),     
+	Vector3(8, 0, 40), 
 	Vector3(61.5, 0, 40),
 	Vector3(20, 0, 47),
-	Vector3(50, 0, 47)   # Atacante 2
+	Vector3(50, 0, 47)   
 ]
 
 var team_players : Array[Node3D] = []
