@@ -10,6 +10,9 @@ friction = 0.8
 rough = true
 bounce = 0.2
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_n5601"]
+radius = 0.12
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xcdm8"]
 resource_name = "FootballBall_mat"
 cull_mode = 2
@@ -55,19 +58,20 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_k5epp")
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_n5601"]
-radius = 0.12
-
 [node name="ball" type="Node3D" unique_id=2033694032]
 
 [node name="RigidBody3D" type="RigidBody3D" parent="." unique_id=599181106]
+collision_layer = 2
+collision_mask = 6
 mass = 0.46
 physics_material_override = SubResource("PhysicsMaterial_hgol0")
 script = ExtResource("2_ktgx5")
 
-[node name="Soccer Ball Optimized" type="MeshInstance3D" parent="RigidBody3D" unique_id=1732008352]
-mesh = SubResource("ArrayMesh_5o2in")
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D" unique_id=1866552592]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
 shape = SubResource("SphereShape3D_n5601")
+
+[node name="PivotVisual" type="Node3D" parent="RigidBody3D" unique_id=1330951774]
+
+[node name="Soccer Ball Optimized" type="MeshInstance3D" parent="RigidBody3D/PivotVisual" unique_id=1732008352]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11, 0)
+mesh = SubResource("ArrayMesh_5o2in")

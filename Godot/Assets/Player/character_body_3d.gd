@@ -1,6 +1,9 @@
 extends CharacterBody3D
 
-const SPEED = 400.0
+var bola_em_posse: Bola = null
+var pode_dominar: bool = true
+
+const SPEED = 150.0
 const JUMP_VELOCITY = 10.0
 
 @onready var animator = get_node("soccer_player/AnimationPlayer") as AnimationPlayer
@@ -34,11 +37,11 @@ func _physics_process(delta: float) -> void:
 		# Verifica se a tecla de cair foi pressionada
 		if Input.is_action_just_pressed("fall") and is_on_floor():
 			iniciar_queda()
-		elif Input.is_action_just_pressed("weak_kick") and is_on_floor():
+		elif Input.is_action_just_pressed("weak_kick") and is_on_floor() and bola_em_posse != null:
 			weak_kick()
-		elif Input.is_action_just_pressed("medium_kick") and is_on_floor():
+		elif Input.is_action_just_pressed("medium_kick") and is_on_floor() and bola_em_posse != null:
 			medium_kick()
-		elif Input.is_action_just_pressed("strong_kick") and is_on_floor():
+		elif Input.is_action_just_pressed("strong_kick") and is_on_floor() and bola_em_posse != null:
 			strong_kick()
 		elif Input.is_action_just_pressed("victory") and is_on_floor():
 			victory()
@@ -62,10 +65,16 @@ func _physics_process(delta: float) -> void:
 		ball_control = 1.01
 
 	move_and_slide()
-	for i in get_slide_collision_count():
-		var collision = get_slide_collision(i)
-		if collision.get_collider(i) is RigidBody3D:
-			collision.get_collider(i).apply_central_impulse(-collision.get_normal() * ball_control * kick_force)
+
+
+func aplicar_cooldown_dominio():
+	bola_em_posse = null  # Esvazia o pé do jogador
+	pode_dominar = false  # Proíbe novos domínios temporariamente
+	
+	# Espera 0.5 segundos (você pode aumentar se achar necessário)
+	await get_tree().create_timer(0.5).timeout
+	
+	pode_dominar = true   # Libera para dominar a bola de novo
 
 func handle_input(delta):
 	var input := Vector3.ZERO
@@ -93,8 +102,6 @@ func jump(delta):
 	if gravity > 0 and is_on_floor():
 		gravity = 0
 
-# --- FUNÇÕES DA ANIMAÇÃO DE QUEDA ---
-
 func iniciar_queda():
 	blocked = true
 	moviment_velocity = Vector3.ZERO
@@ -104,20 +111,35 @@ func weak_kick():
 	blocked = true
 	animator.play("weak_kick", 0.2)
 	kick_force = 2
-	$KickTimer.start()
+	var direcao = global_transform.basis.z.normalized()
+	direcao = direcao.normalized()
+	bola_em_posse.chutar(direcao, kick_force)
+	
+	aplicar_cooldown_dominio()
 	
 	
 func medium_kick():
 	blocked = true
 	animator.play("medium_kick", 0.2)
 	kick_force = 4
-	$KickTimer.start()
+	
+	var direcao = global_transform.basis.z.normalized()
+	direcao = direcao.normalized()
+	bola_em_posse.chutar(direcao, kick_force)
+	
+	aplicar_cooldown_dominio()
 	
 func strong_kick():
 	blocked = true
 	animator.play("strong_kick", 0.2)
-	kick_force = 6
-	$KickTimer.start()
+	kick_force = 10
+	
+	var direcao = global_transform.basis.z.normalized()
+	direcao.y += 0.4
+	direcao = direcao.normalized()
+	bola_em_posse.chutar(direcao, kick_force)
+	
+	aplicar_cooldown_dominio()
 	
 func victory():
 	blocked = true
@@ -128,8 +150,8 @@ func _on_animation_finished(anim_name: String):
 	if anim_name != "idle" and anim_name != "slow_run":
 		blocked = false
 
-
-func _on_kick_timer_timeout() -> bool:
-	print(kick_force)
-	kick_force = 1
-	return true
+func _on_possesion_area_body_entered(body: Node3D) -> void:
+	print("colidiu com ", body.name)
+	if body is Bola and pode_dominar:
+		bola_em_posse = body
+		bola_em_posse.dominar(self)
