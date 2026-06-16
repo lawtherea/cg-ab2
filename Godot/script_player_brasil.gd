@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const SPEED = 500.0
+const SPEED = 150.0
 const JUMP_VELOCITY = 10.0
 
 @onready var animator = get_node("model_player_brasil/AnimationPlayer") as AnimationPlayer
@@ -13,7 +13,10 @@ var rotation_direction : float
 # --- VARIÁVEIS DE CONTROLE E IA BASEADA EM ZONAS ---
 @export var is_controlled : bool = false      # Define se este jogador recebe inputs do teclado
 var formation_target_position : Vector3       # Posição ideal enviada pelo Manager (se aplicável)
-var ball_node : Node3D                        # Referência para a bola do jogo
+var ball_node: Bola = null                  # Referência para a bola do jogo
+var ball_possession: bool = false
+var kick_force: int
+var pode_dominar: bool = true
 @export var min_distance_to_ball : float = 3  # Distância física ideal para cercar a bola
 
 @export var patrol_radius : float = 10.0       # Raio da área/zona que o jogador protege e monitora
@@ -73,11 +76,11 @@ func handle_user_actions():
 		
 	if Input.is_action_just_pressed("fall"):
 		iniciar_queda()
-	elif Input.is_action_just_pressed("weak_kick"):
+	elif Input.is_action_just_pressed("weak_kick") and ball_possession:
 		weak_kick()
-	elif Input.is_action_just_pressed("medium_kick"):
+	elif Input.is_action_just_pressed("medium_kick") and ball_possession:
 		medium_kick()
-	elif Input.is_action_just_pressed("strong_kick"):
+	elif Input.is_action_just_pressed("strong_kick") and ball_possession:
 		strong_kick()
 	elif Input.is_action_just_pressed("victory"):
 		victory()
@@ -179,6 +182,12 @@ func jump(delta):
 	if Input.is_action_just_pressed("jump") and is_on_floor():
 		gravity = -JUMP_VELOCITY
 
+func aplicar_cooldown_dominio():
+	ball_possession = false
+	pode_dominar = false  
+	await get_tree().create_timer(0.5).timeout
+	pode_dominar = true
+
 # --- FUNÇÕES DAS ANIMAÇÕES DE BLOQUEIO ---
 func iniciar_queda():
 	blocked = true
@@ -192,17 +201,35 @@ func weak_kick():
 	moviment_velocity = Vector3.ZERO
 	animator.play("weak_kick", 0.1)
 	
+	kick_force = 2
+	var direcao = global_transform.basis.z.normalized()
+	direcao = direcao.normalized()
+	ball_node.chutar(direcao, kick_force)
+	aplicar_cooldown_dominio()
+	
 func medium_kick():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("medium_kick", 0.1)
 	
+	kick_force = 6
+	var direcao = global_transform.basis.z.normalized()
+	direcao = direcao.normalized()
+	ball_node.chutar(direcao, kick_force)
+	aplicar_cooldown_dominio()
+	
 func strong_kick():
 	blocked = true
 	velocity = Vector3.ZERO
 	moviment_velocity = Vector3.ZERO
 	animator.play("strong_kick", 0.1)
+	
+	kick_force = 8
+	var direcao = global_transform.basis.z.normalized()
+	direcao = direcao.normalized()
+	ball_node.chutar(direcao, kick_force)
+	aplicar_cooldown_dominio()
 	
 func victory():
 	blocked = true
@@ -217,3 +244,41 @@ func _on_animation_finished(anim_name: String):
 		if animacao_bloqueante in anim_name:
 			blocked = false
 			return
+
+func _on_possession_area_area_entered(area: Area3D) -> void:
+	var jogador_rival = area.get_parent()
+	if "ball_possession" in jogador_rival and jogador_rival.ball_possession == true:
+		print("Dividida! Brasil desarmou a Argentina!")
+		jogador_rival.aplicar_cooldown_dominio()
+		
+		var direcao_dividida = (ball_node.global_position - global_position).normalized()
+		direcao_dividida.y += 0.2 # Dá uma leve levantada na bola
+		direcao_dividida = direcao_dividida.normalized()
+			
+		ball_node.chutar(direcao_dividida, 2.0)
+			
+		aplicar_cooldown_dominio()
+
+func _on_possession_area_body_entered(body: Node3D) -> void:
+	print("--- RELATÓRIO DE COLISÃO ---")
+	print("eu [PossesionArea] to na layer 2?", $PossessionArea.get_collision_layer_value(2))
+	print("eu [PossesionArea] vejo a mascara 2?", $PossessionArea.get_collision_mask_value(2))
+	print("1. Encostei no objeto chamado: ", body.name)
+	
+	# Verifica se o objeto tem a propriedade de colisão antes de checar
+	if body is CollisionObject3D:
+		# Checa as Layers do objeto que encostou (Bola)
+		print("2. O objeto está na Layer 2 (Bola)? ", body.get_collision_layer_value(2))
+		
+		# Checa as Masks da sua própria Área (PossesionArea)
+		# O $PossesionArea pressupõe que o nó se chama assim na árvore do jogador
+		var minha_area = $PossessionArea
+		print("3. A minha Área consegue enxergar a Layer 2? ", minha_area.get_collision_mask_value(2))
+	
+	print("4. O Godot reconhece a classe como Bola? ", body is Bola)
+	print("----------------------------")
+
+	# A sua lógica normal de domínio
+	if body is Bola and pode_dominar:
+		ball_possession = true
+		ball_node.dominar(self)
