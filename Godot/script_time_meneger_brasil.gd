@@ -102,3 +102,7 @@ func resetar_posicoes_time() -> void:
 			if player is CharacterBody3D:
 				player.velocity = Vector3.ZERO
 				player.moviment_velocity = Vector3.ZERO
+
+func time_comemorar() -> void:
+	for jogador in self.team_players:
+		jogador.victory()

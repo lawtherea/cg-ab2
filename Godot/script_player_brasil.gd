@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const SPEED = 150.0
+var SPEED = 150.0
 const JUMP_VELOCITY = 10.0
 
 @onready var animator = get_node("model_player_brasil/AnimationPlayer") as AnimationPlayer
@@ -17,6 +17,7 @@ var ball_node: Bola = null                  # Referência para a bola do jogo
 var ball_possession: bool = false
 var kick_force: int
 var pode_dominar: bool = true
+var running: bool = false
 @export var min_distance_to_ball : float = 3  # Distância física ideal para cercar a bola
 
 @export var patrol_radius : float = 10.0       # Raio da área/zona que o jogador protege e monitora
@@ -84,6 +85,14 @@ func handle_user_actions():
 		strong_kick()
 	elif Input.is_action_just_pressed("victory"):
 		victory()
+	elif Input.is_action_just_pressed("toggle_run"):
+		if running:
+			running = false
+			SPEED = 150
+		else:
+			running = true
+			SPEED = 350
+		
 
 # --- LÓGICA DE IA POR ZONA DE ATUAÇÃO COM DESLOCAMENTO DINÂMICO DO EIXO Z ---
 func handle_ai_zone(delta: float):
@@ -165,8 +174,11 @@ func handle_animations():
 	if blocked:
 		return
 	if abs(velocity.x) > 0.2 or abs(velocity.z) > 0.2:
-		animator.play("slow_run", 0.3)
-	else :
+		if !running:
+			animator.play("slow_run", 0.3)
+		else:
+			animator.play("fast_run")
+	else:
 		animator.play("idle", 0.3)
 		
 func apply_gravity(delta):
@@ -201,7 +213,7 @@ func weak_kick():
 	moviment_velocity = Vector3.ZERO
 	animator.play("weak_kick", 0.1)
 	
-	kick_force = 2
+	kick_force = 4
 	var direcao = global_transform.basis.z.normalized()
 	direcao = direcao.normalized()
 	ball_node.chutar(direcao, kick_force)
@@ -213,7 +225,7 @@ func medium_kick():
 	moviment_velocity = Vector3.ZERO
 	animator.play("medium_kick", 0.1)
 	
-	kick_force = 6
+	kick_force = 8
 	var direcao = global_transform.basis.z.normalized()
 	direcao = direcao.normalized()
 	ball_node.chutar(direcao, kick_force)
@@ -225,9 +237,10 @@ func strong_kick():
 	moviment_velocity = Vector3.ZERO
 	animator.play("strong_kick", 0.1)
 	
-	kick_force = 8
+	kick_force = 15
 	var direcao = global_transform.basis.z.normalized()
 	direcao = direcao.normalized()
+	direcao.y = 0.2
 	ball_node.chutar(direcao, kick_force)
 	aplicar_cooldown_dominio()
 	

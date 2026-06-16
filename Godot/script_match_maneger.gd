@@ -88,6 +88,7 @@ func _on_goal_brasil_body_entered(body: Node3D) -> void:
 func _on_goal_argentina_body_entered(body: Node3D) -> void:
 	if body == ball:
 		gols_time_A += 1 # Gol do Brasil
+		team_manager_jogador.time_comemorar()
 		computar_gol()
 
 func computar_gol() -> void:
@@ -100,7 +101,7 @@ func computar_gol() -> void:
 		interface_hud.mostrar_aviso_gol()
 		
 	atualizar_interface_telao()
-		
+	
 	# Pausa para comemoração
 	await get_tree().create_timer(3.0).timeout
 	

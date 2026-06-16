@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const SPEED = 500.0
+const SPEED = 200
 
 
 @onready var animator = get_node("model_player_argentina/AnimationPlayer") as AnimationPlayer
@@ -13,12 +13,10 @@ var rotation_direction : float
 var ball_node : Node3D                        
 var min_distance_to_ball : float = 1.5        # Menor para a IA de fato tocar/chutar a bola
 var patrol_radius : float = 15.0              # Raio de patrulha ligeiramente maior para cobertura adversária
-var home_position : Vector3                    # Ponto inicial/tático do jogador
+var home_position : Vector3                   # Ponto inicial/tático do jogador
 var formation_target_position : Vector3
 var pode_dominar: bool = true
 var ball_possession: bool = false
-
-# Nova variável controlada pelo Manager da Argentina
 var is_chaser : bool = false                  
 
 var blocked : bool = false
@@ -50,9 +48,7 @@ func _physics_process(delta: float) -> void:
 	velocity = applied_velocity
 	move_and_slide()
 
-# --- LÓGICA DE IA DA ARGENTINA (ESPELHADA E ADVERSÁRIA) ---
-# --- LÓGICA DE IA DA ARGENTINA (ATUALIZADA) ---
-# --- LÓGICA DE IA DA ARGENTINA (ATUALIZADA PARA REPOSIÇÃO DE POSIÇÃO) ---
+# --- LÓGICA DE IA DA ARGENTINA ---
 func handle_ai_zone_argentina(delta: float):
 	if not ball_node:
 		moviment_velocity = Vector3.ZERO
@@ -103,7 +99,7 @@ func handle_ai_zone_argentina(delta: float):
 			
 	# --- SE NÃO FOR MAIS ELEGÍVEL / NÃO FOR O CHASER ---
 	else:
-		# MODIFICAÇÃO: O alvo principal passa a ser OBRIGATORIAMENTE a sua posição na formação
+		# O alvo principal passa a ser OBRIGATORIAMENTE a sua posição na formação
 		target_pos = dynamic_home
 		
 		# Se ele já chegou muito perto da sua posição tática na formação (ex: menos de 1 metro)
