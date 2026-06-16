@@ -23,17 +23,6 @@ func _ready() -> void:
 	
 	# Congela os times e a bola antes do input inicial
 	congelar_partida(true)
-	
-	# Configura a textura do telão diretamente via código 
-	if mesh_telao and interface_telao:
-		var textura_viewport = interface_telao.get_texture()
-		var material_3d = mesh_telao.get_material_override() as StandardMaterial3D
-		
-		if material_3d:
-			material_3d.albedo_texture = textura_viewport
-			material_3d.emission_enabled = true
-			material_3d.emission_texture = textura_viewport
-			print("Conexão de vídeo do telão realizada com sucesso via código!")
 
 	# Inicializa os textos dos placares e avisos
 	if interface_hud:
@@ -41,8 +30,10 @@ func _ready() -> void:
 		# Garante que o texto de "Pressione para iniciar" apareça na HUD
 		if interface_hud.has_method("mostrar_aviso_iniciar"):
 			interface_hud.mostrar_aviso_iniciar()
-		
+
 	atualizar_interface_telao()
+	await _forcar_render_telao()
+	_aplicar_textura_telao()
 
 # Captura click pra começar o jogo
 func _unhandled_input(event: InputEvent) -> void:
@@ -119,6 +110,25 @@ func computar_gol() -> void:
 # funcao para telao
 func atualizar_interface_telao() -> void:
 	if interface_telao:
-		var script_espelho = interface_telao.get_node_or_null("Control_Espelho")
+		var script_espelho = interface_telao.get_node_or_null("Control")
 		if script_espelho and script_espelho.has_method("atualizar_placar"):
 			script_espelho.atualizar_placar(gols_time_A, gols_time_B)
+
+func _aplicar_textura_telao() -> void:
+	if not mesh_telao or not interface_telao:
+		return
+	var textura_viewport = interface_telao.get_texture()
+	var material_3d = mesh_telao.get_material_override() as StandardMaterial3D
+	if material_3d:
+		material_3d.albedo_texture = textura_viewport
+		material_3d.emission_enabled = true
+		material_3d.emission_texture = textura_viewport
+
+# O ViewportTexture só aparece no telão 3D após forçar um refresh do SubViewport
+func _forcar_render_telao() -> void:
+	if not interface_telao:
+		return
+	interface_telao.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	await get_tree().process_frame
+	interface_telao.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	await get_tree().process_frame
