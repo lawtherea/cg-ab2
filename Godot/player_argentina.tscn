@@ -7,6 +7,9 @@
 radius = 0.2685547
 height = 1.8568726
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_vjsv6"]
+size = Vector3(0.56225586, 0.17, 0.5125342)
+
 [node name="player_argentina" type="CharacterBody3D" unique_id=161615978]
 script = ExtResource("1_vjsv6")
 
@@ -16,3 +19,17 @@ transform = Transform3D(0.025, 0, 0, 0, 0.025, 0, 0, 0, 0.025, 0, 0, 0)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=906078011]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84506226, 0)
 shape = SubResource("CapsuleShape3D_c52ec")
+
+[node name="DribblePoint" type="Marker3D" parent="." unique_id=1528921546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0.4)
+
+[node name="PossessionArea" type="Area3D" parent="." unique_id=279273011]
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PossessionArea" unique_id=1736979865]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.024, 0.055000067, 0.20476708)
+shape = SubResource("BoxShape3D_vjsv6")
+
+[connection signal="area_entered" from="PossessionArea" to="." method="_on_possession_area_area_entered"]
+[connection signal="body_entered" from="PossessionArea" to="." method="_on_possession_area_body_entered"]

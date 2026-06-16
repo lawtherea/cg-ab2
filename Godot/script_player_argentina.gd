@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const SPEED = 500.0
 
+
 @onready var animator = get_node("model_player_argentina/AnimationPlayer") as AnimationPlayer
 
 var gravity = 0
@@ -14,6 +15,8 @@ var min_distance_to_ball : float = 1.5        # Menor para a IA de fato tocar/ch
 var patrol_radius : float = 15.0              # Raio de patrulha ligeiramente maior para cobertura adversária
 var home_position : Vector3                    # Ponto inicial/tático do jogador
 var formation_target_position : Vector3
+var pode_dominar: bool = true
+var ball_possession: bool = false
 
 # Nova variável controlada pelo Manager da Argentina
 var is_chaser : bool = false                  
@@ -70,22 +73,33 @@ func handle_ai_zone_argentina(delta: float):
 
 	# --- SE FOR O CAÇADOR (CHASER) ELEITO ---
 	if is_chaser:
-		# Coordenada do centro do gol do adversário (Brasil)
-		var gol_alvo = Vector3(35, 0, 0)
-		
-		# Calcula a direção da bola para o gol
-		var direcao_para_o_gol = (gol_alvo - ball_pos).normalized()
-		
-		# O jogador se posiciona atrás da bola na linha do gol para empurrá-la para frente
-		var distancia_atras_da_bola = 1.3
-		target_pos = ball_pos - (direcao_para_o_gol * distancia_atras_da_bola)
-		target_pos.y = global_position.y
-		
-		# Se já colidiu ou está colado na bola, diminui a velocidade para processar a física do impacto
-		if distance_to_ball <= min_distance_to_ball:
-			moviment_velocity = column_decay_stop(delta)
-			focar_olhar(ball_pos)
+		# Verifica se um brasileiro está com a posse da bola
+		var portador = null
+		if "jogador_atual" in ball_node:
+			portador = ball_node.jogador_atual
+
+		if portador != null:
+			# MODO INTERCEPÇÃO: vai direto no portador sem desacelerar para garantir o roubo
+			target_pos = portador.global_position
+			target_pos.y = global_position.y
+			var dir = (target_pos - global_position)
+			dir.y = 0
+			if dir.length() > 0.1:
+				moviment_velocity = dir.normalized() * (SPEED * 0.90) * delta
+			focar_olhar(target_pos)
 			return
+		else:
+			# Bola livre: posiciona atrás da bola em direção ao gol adversário
+			var gol_alvo = Vector3(35, 0, 0)
+			var direcao_para_o_gol = (gol_alvo - ball_pos).normalized()
+			var distancia_atras_da_bola = 1.3
+			target_pos = ball_pos - (direcao_para_o_gol * distancia_atras_da_bola)
+			target_pos.y = global_position.y
+
+			if distance_to_ball <= min_distance_to_ball:
+				moviment_velocity = column_decay_stop(delta)
+				focar_olhar(ball_pos)
+				return
 			
 	# --- SE NÃO FOR MAIS ELEGÍVEL / NÃO FOR O CHASER ---
 	else:
@@ -143,3 +157,49 @@ func _on_animation_finished(anim_name: String):
 		if blocking_animations[i] in anim_name:
 			blocked = false
 			return
+
+func aplicar_cooldown_dominio():
+	pode_dominar = false
+	await get_tree().create_timer(0.8).timeout 
+	pode_dominar = true
+
+func _on_possession_area_area_entered(area: Area3D) -> void:
+	var jogador_rival = area.get_parent()
+	if "ball_possession" in jogador_rival and jogador_rival.ball_possession == true:
+		print("Dividida! Argentina desarmou o Brasil!")
+		jogador_rival.aplicar_cooldown_dominio()
+		
+		var direcao_para_gol = (Vector3(35, 0, 0) - ball_node.global_position).normalized()
+		var lateral = direcao_para_gol.cross(Vector3.UP).normalized()
+		var direcao_dividida = (direcao_para_gol + lateral * 0.5).normalized()
+		direcao_dividida.y += 0.15
+		direcao_dividida = direcao_dividida.normalized()
+
+		ball_node.chutar(direcao_dividida, 5.0)
+			
+		aplicar_cooldown_dominio()
+
+
+func _on_possession_area_body_entered(body: Node3D) -> void:
+	print("--- RELATÓRIO DE COLISÃO ARGENTINA ---")
+	print("eu [PossesionArea] to na layer 2?", $PossessionArea.get_collision_layer_value(2))
+	print("eu [PossesionArea] vejo a mascara 2?", $PossessionArea.get_collision_mask_value(2))
+	print("1. Encostei no objeto chamado: ", body.name)
+	
+	# Verifica se o objeto tem a propriedade de colisão antes de checar
+	if body is CollisionObject3D:
+		# Checa as Layers do objeto que encostou (Bola)
+		print("2. O objeto está na Layer 2 (Bola)? ", body.get_collision_layer_value(2))
+		
+		# Checa as Masks da sua própria Área (PossesionArea)
+		# O $PossesionArea pressupõe que o nó se chama assim na árvore do jogador
+		var minha_area = $PossessionArea
+		print("3. A minha Área consegue enxergar a Layer 2? ", minha_area.get_collision_mask_value(2))
+	
+	print("4. O Godot reconhece a classe como Bola? ", body is Bola)
+	print("----------------------------")
+
+	# A sua lógica normal de domínio
+	if body is Bola and pode_dominar:
+		ball_possession = true
+		ball_node.dominar(self)
