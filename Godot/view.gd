@@ -19,7 +19,7 @@ var zoom = 10
 @onready var camera = $Camera
 
 func _ready():
-	
+	rotation_degrees.y += 180.0
 	camera_rotation = rotation_degrees # Initial rotation
 	
 	pass
