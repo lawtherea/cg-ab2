@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bvomqx3f8ek1k"]
 
 [ext_resource type="Script" uid="uid://xt5iry33jww" path="res://script_player_brasil.gd" id="1_k0c2i"]
-[ext_resource type="PackedScene" uid="uid://c84mi2vfvtdto" path="res://Assets/Player/soccer_player.glb" id="2_28fyv"]
+[ext_resource type="PackedScene" uid="uid://benlqryxbju08" path="res://model_player_brasil.tscn" id="2_k0c2i"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_k0c2i"]
 radius = 0.43164063
@@ -14,5 +14,5 @@ metadata/_edit_group_ = true
 transform = Transform3D(0.83, 0, 0, 0, 0.83, 0, 0, 0, 0.83, 0.006408386, 0.7861717, 0.037580848)
 shape = SubResource("CylinderShape3D_k0c2i")
 
-[node name="model_player_brasil" parent="." unique_id=174052475 instance=ExtResource("2_28fyv")]
+[node name="model_player_brasil" parent="." unique_id=1300291566 instance=ExtResource("2_k0c2i")]
 transform = Transform3D(0.025, 0, 0, 0, 0.025, 0, 0, 0, 0.025, 0, 0, 0)
