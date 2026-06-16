@@ -4,7 +4,7 @@ extends Node
 @export var ball : Node3D              
 @export var player_scene : PackedScene 
 
-# Posições iniciais de formação (onde cada um cria sua "casa/zona")
+# Posições iniciais de formação 
 @export var formation_offsets : Array[Vector3] = [
 	Vector3(35, 0, 50),
 	Vector3(15, 0, 15),
@@ -29,16 +29,16 @@ func _ready() -> void:
 	for i in range(formation_offsets.size()):
 		var new_player = player_scene.instantiate() as CharacterBody3D
 		
-		# 1. Primeiro adicionamos o jogador na árvore de nós
+		# Adicionamos o jogador na árvore de nós
 		add_child(new_player)
 		
-		# 2. Injetamos a referência da bola
+		# Injetamos a referência da bola
 		new_player.ball_node = ball
 		
-		# 3. Aplicamos a posição real de jogo no mundo 3D
+		# Aplicamos a posição real de jogo no mundo 3D
 		new_player.global_position = formation_offsets[i]
 		
-		# 4. SOLUÇÃO: Forçamos o script do jogador a salvar este ponto como sua "casa" tática
+		# Forçamos o script do jogador a salvar este ponto como seu início
 		new_player.home_position = formation_offsets[i]
 		new_player.formation_target_position = formation_offsets[i]
 		
@@ -69,7 +69,6 @@ func definir_jogador_ativo(index: int):
 			player.view = view_camera  
 			view_camera.target = player 
 		else:
-			# CORREÇÃO: Removemos completamente qualquer menção a "is_chaser" aqui
 			player.is_controlled = false
 			player.view = null 
 
@@ -93,3 +92,13 @@ func alternar_proximo_jogador():
 			
 	if j_mais_proximo_idx != -1:
 		definir_jogador_ativo(j_mais_proximo_idx)
+		
+func resetar_posicoes_time() -> void:
+	for i in range(team_players.size()):
+		var player = team_players[i]
+		if player:
+			player.global_position = player.home_position
+			
+			if player is CharacterBody3D:
+				player.velocity = Vector3.ZERO
+				player.moviment_velocity = Vector3.ZERO

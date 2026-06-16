@@ -3,18 +3,18 @@ extends Node
 @export var ball : Node3D              
 @export var argentina_player_scene : PackedScene 
 
-# Formação da Argentina posicionada no lado oposto (Valores altos de Z)
+# Formação da Argentina  
 @export var formation_offsets : Array[Vector3] = [
-	Vector3(35, 0, 60),   # Goleiro
-	Vector3(15, 0, 75),   # Lateral Direito
-	Vector3(28, 0, 70),   # Zagueiro 1
-	Vector3(42, 0, 70),   # Zagueiro 2
-	Vector3(55, 0, 75),   # Lateral Esquerdo
-	Vector3(20, 0, 85),   # Meio Campo 1
-	Vector3(35, 0, 80),   # Meio Campo Central
-	Vector3(50, 0, 85),   # Meio Campo 2
-	Vector3(25, 0, 95),   # Atacante 1
-	Vector3(45, 0, 95)    # Atacante 2
+	Vector3(35, 0, 60),   
+	Vector3(15, 0, 75),   
+	Vector3(28, 0, 70),   
+	Vector3(42, 0, 70),   
+	Vector3(55, 0, 75),   
+	Vector3(20, 0, 85),   
+	Vector3(35, 0, 80),   
+	Vector3(50, 0, 85),   
+	Vector3(25, 0, 95),   
+	Vector3(45, 0, 95)    
 ]
 
 var team_players : Array[Node3D] = []
@@ -51,8 +51,8 @@ func eleger_perseguidor_da_bola():
 	for i in range(team_players.size()):
 		var player = team_players[i]
 		
-		# REGRA SOLICITADA: Se o jogador estiver em uma posição Z menor que a bola (à frente dela na defesa),
-		# ele não pode ir atrás dela, pois empurraria a bola para o próprio campo.
+		# Se o jogador estiver em uma posição Z menor que a bola (à frente dela na defesa),
+		# ele não pode ir atrás dela
 		if player.global_position.z < ball_pos.z:
 			continue # Ignora este jogador, passa para o próximo
 			
@@ -67,3 +67,13 @@ func eleger_perseguidor_da_bola():
 			team_players[i].is_chaser = true
 		else:
 			team_players[i].is_chaser = false
+
+func resetar_posicoes_time() -> void:
+	for i in range(team_players.size()):
+		var player = team_players[i]
+		if player:
+			player.global_position = player.home_position
+			
+			if player is CharacterBody3D:
+				player.velocity = Vector3.ZERO
+				player.moviment_velocity = Vector3.ZERO
