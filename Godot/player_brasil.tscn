@@ -7,7 +7,7 @@
 radius = 0.43164063
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_k0c2i"]
-size = Vector3(0.56225586, 0.17, 0.5125342)
+size = Vector3(0.6933594, 0.17, 0.5125342)
 
 [node name="player_brasil" type="CharacterBody3D" unique_id=2026482493]
 collision_mask = 5
