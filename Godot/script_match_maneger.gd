@@ -1,5 +1,9 @@
 extends Node
 
+const SOM_TORCIDA_FUNDO := preload("res://Sounds/torcida_fundo_2_otimizado.wav")
+const SOM_TORCIDA_GOL := preload("res://Sounds/torcida_gol_2_otimizado.wav")
+const SOM_APITO := preload("res://Sounds/apito.wav")
+
 @export var ball : Node3D              
 @export var interface_hud : CanvasLayer  # Placar que fica colado na tela do jogador
 
@@ -17,7 +21,13 @@ var gols_time_B : int = 0
 # Controle do estado da partida
 var jogo_iniciado : bool = false
 
+var player_torcida_fundo : AudioStreamPlayer
+var player_torcida_gol : AudioStreamPlayer
+var player_apito : AudioStreamPlayer
+
 func _ready() -> void:
+	_inicializar_sons()
+
 	# Espera um frame para garantir que todos os nós nasceram na memória
 	await get_tree().process_frame
 	
@@ -44,6 +54,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func iniciar_partida() -> void:
 	print("Partida Iniciada! Jogadores liberados.")
 	jogo_iniciado = true
+	_tocar_apito()
 	
 	# Esconde o texto de aviso "Pressione qualquer tecla"
 	if interface_hud and interface_hud.has_method("esconder_aviso_iniciar"):
@@ -80,6 +91,9 @@ func _on_goal_argentina_body_entered(body: Node3D) -> void:
 		computar_gol()
 
 func computar_gol() -> void:
+	if player_torcida_gol:
+		player_torcida_gol.play()
+
 	# Atualiza as duas interfaces simultaneamente
 	if interface_hud:
 		interface_hud.atualizar_placar(gols_time_A, gols_time_B)
@@ -106,6 +120,32 @@ func computar_gol() -> void:
 		
 	if team_manager_adversario and team_manager_adversario.has_method("resetar_posicoes_time"):
 		team_manager_adversario.resetar_posicoes_time()
+
+	_tocar_apito()
+
+func _inicializar_sons() -> void:
+	player_torcida_fundo = _criar_player("TorcidaFundo", SOM_TORCIDA_FUNDO, -4.0)
+	player_torcida_gol = _criar_player("TorcidaGol", SOM_TORCIDA_GOL)
+	player_apito = _criar_player("Apito", SOM_APITO)
+
+	player_torcida_fundo.finished.connect(_repetir_torcida_fundo)
+	player_torcida_fundo.play()
+
+func _repetir_torcida_fundo() -> void:
+	if player_torcida_fundo:
+		player_torcida_fundo.play()
+
+func _criar_player(nome: String, stream: AudioStream, volume_db: float = 0.0) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.name = nome
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	return player
+
+func _tocar_apito() -> void:
+	if player_apito:
+		player_apito.play()
 
 # funcao para telao
 func atualizar_interface_telao() -> void:
