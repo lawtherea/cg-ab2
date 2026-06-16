@@ -35,3 +35,42 @@ This project was built with:
 * **Godot**
 * **GDScript**
 * **Blender**
+
+## Controls
+
+### Main Menu
+
+| Action | Control |
+| --- | --- |
+| Start game | **Play** button |
+| Toggle day/night mode | **Night mode** checkbox |
+| Quit | **Quit** button |
+
+### Match
+
+| Action | Control |
+| --- | --- |
+| Start match | Any key, mouse button, or gamepad button |
+| Return to main menu | **Esc** |
+
+### Player
+
+| Action | Control |
+| --- | --- |
+| Move | **W** / **A** / **S** / **D** |
+| Jump | **Space** |
+| Fall | **C** |
+| Weak kick | **Q** (with ball possession) |
+| Medium kick | **E** (with ball possession) |
+| Strong kick | **F** (with ball possession) |
+| Celebration | **V** |
+| Toggle run / walk | **Shift** |
+| Switch player | **Tab** |
+
+### Camera
+
+| Action | Control |
+| --- | --- |
+| Rotate up / down | **I** / **K** |
+| Rotate left / right | **J** / **L** |
+| Zoom in / out | **+** / **-** or mouse wheel |
