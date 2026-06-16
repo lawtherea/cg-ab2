@@ -1,5 +1,7 @@
 # Computer Graphics Project — 3D Soccer Field in Godot
 
+https://github.com/user-attachments/assets/2d88d0cf-7e1a-46cf-80d6-ebcfbfaf216e
+
 This repository contains a project developed for the second assessment of the Computer Graphics course at the Federal University of Alagoas (UFAL), taught by **Prof. Dr. Marcelo Costa Oliveira**.
 
 ## Team
